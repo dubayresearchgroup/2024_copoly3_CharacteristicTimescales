@@ -1,0 +1,141 @@
+# Start with the name of simulation
+variable sim_name string 200813_copoly3_standard-1
+log ${sim_name}.log
+# simulation parameters or conditions
+variable damp       equal   0.1
+variable epsAA      equal   3.0
+variable epsAB      equal   0.0
+variable epsBB      equal   3.0
+variable eps_hard   equal   4.0
+variable angleK1    equal   100
+variable angleKA    equal   50
+variable angleKB    equal   50
+variable angleA     equal   180
+variable angleB     equal   180
+variable shiftA     equal   0.0
+variable shiftB     equal   0.0
+variable sp         equal   0.0
+variable temp       equal   3.0
+variable activation equal   9.0
+variable seed       equal   12345
+# read data from file
+dimension 3
+boundary p p p
+units lj
+comm_style tiled
+
+neighbor 0.5 bin
+neigh_modify delay 3
+
+atom_style angle
+
+variable size   equal 50
+variable nmono  equal 7200
+variable inputfile string mono7200.data
+read_data ${inputfile}
+# things before run.
+variable q string '"'
+print """{
+  "name": $q${sim_name}$q, 
+  "inputdata": $q${inputfile}$q,
+  "size": ${size},
+  "Nmono": ${nmono},
+  "epsAA": ${epsAA}, 
+  "epsAB": ${epsAB}, 
+  "epsBB": ${epsBB}, 
+  "damp": ${damp}, 
+  "angleA": ${angleA}, 
+  "angleB": ${angleB}, 
+  "angleKA": ${angleKA},
+  "angleKB": ${angleKB},
+  "shiftA": ${shiftA},
+  "shiftB": ${shiftB},
+  "Temp": ${temp}, 
+  "epshard": ${eps_hard}, 
+  "activation": ${activation}, 
+  "seed": ${seed}
+}""" file ${sim_name}_param.json
+
+mass 1 0.25
+mass 2 0.5
+mass 3 0.5
+
+special_bonds lj 0.0 0.0 ${sp}
+pair_style hybrid lj/twopiece 2.5 zero 2.5 nocoeff soft/shift 0.3
+# zero attraction for now
+pair_coeff 2 2 lj/twopiece 0 ${eps_hard} 1.0 
+pair_coeff 3 3 lj/twopiece 0 ${eps_hard} 1.0 
+pair_coeff 2 3 lj/twopiece 0 ${eps_hard} 1.0 
+pair_coeff 1 2*3 zero
+pair_coeff 1 1 soft/shift $(v_activation/2) 0.2
+
+bond_style harmonic
+bond_coeff 1 6000.0 0.15
+bond_coeff 2 2000.0 0.4
+bond_coeff 3 2000.0 0.4
+
+angle_style harmonic
+angle_coeff 1 ${angleK1} 180
+angle_coeff 2 ${angleKA} ${angleA}
+angle_coeff 3 ${angleKB} ${angleB}
+
+write_dump all custom ${sim_name}-type id type
+
+fix setup_1a all nve
+fix setup_1b all langevin ${temp} ${temp} ${damp} ${seed}
+fix setup_2 all balance 10000 1.2 rcb
+
+compute msd all msd
+compute binfo all property/local btype batom1 batom2
+#variable bcount equal sum($(c_binfo[1] == 1)) # fix bond/create[2] will not keep after a restart. 
+
+timestep 0.001
+thermo 1000
+
+
+
+
+# run with no attraction, as an initialization.
+
+timestep 0.01
+minimize 1.0e-4 1.0e-6 100 1000
+timestep 0.001
+
+velocity all create ${temp} ${seed}
+run 100000
+
+# run with attraction, no reaction.
+pair_coeff 2 2 lj/twopiece ${epsAA} ${eps_hard} 1.0
+pair_coeff 3 3 lj/twopiece ${epsBB} ${eps_hard} 1.0
+pair_coeff 2 3 lj/twopiece ${epsAB} ${eps_hard} 1.0
+
+reset_timestep 0
+
+run 500000
+
+# run reaction until reaction extent goes to a certain value, write end configuration
+pair_coeff 2 2 lj/twopiece ${epsAA} ${eps_hard} 1.0
+pair_coeff 3 3 lj/twopiece ${epsBB} ${eps_hard} 1.0
+pair_coeff 2 3 lj/twopiece ${epsAB} ${eps_hard} 1.0 
+reset_timestep 0
+
+fix prt all print/if 1 "step $(step) bond $(f_bdcr[2])" "$(f_bdcr[1]) > 0"
+fix bdcr all bond/create 1 1 1 0.20 1 iparam 1 1 jparam 1 1 atype 1 
+
+dump run_reac_1 all atom 10000 ${sim_name}.lammpstrj
+dump run_reac_2 all local 100000 ${sim_name}-bond c_binfo[1] c_binfo[2] c_binfo[3]
+#dump run_reac_1a all atom 1 ${sim_name}_reac.lammpstrj
+#dump run_reac_2a all local 1 ${sim_name}_reac-bond c_binfo[1] c_binfo[2] c_binfo[3]
+#dump_modify run_reac_1a if "$(f_bdcr[1]) > 0"
+#dump_modify run_reac_2a if "$(f_bdcr[1]) > 0"
+
+label runloop
+  run 20000000
+  if "$(f_bdcr[2] / v_nmono) >= 0.9" then & 
+    "jump SELF endrun"
+  write_restart ${sim_name}_bond$(f_bdcr[2])_step*.restart
+jump SELF runloop
+label endrun
+
+write_data ${sim_name}.data
+write_restart ${sim_name}.restart

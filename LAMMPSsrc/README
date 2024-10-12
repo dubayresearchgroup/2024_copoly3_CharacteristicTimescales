@@ -1,0 +1,3 @@
+All simulations were run in LAMMPS version 7Aug19. Some additional "in-house" LAMMPS src files were used, and are included here.
+
+These files should be placed in the /src/ directory of LAMMPS prior to compiling LAMMPS.

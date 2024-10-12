@@ -1,0 +1,10 @@
+{
+  "name": "210412_copoly3_standard-4",   "inputdata": "mono7200.data",
+  "size": 50,
+  "Nmono": 7200,
+  "epsAA": 3,   "epsAB": 0,   "epsBB": 3,   "damp": 0.1,   "angleA": 180,   "angleB": 180,   "angleKA": 50,
+  "angleKB": 50,
+  "shiftA": 0,
+  "shiftB": 0,
+  "Temp": 3,   "epshard": 4,   "activation": 9,   "seed": 12345
+}

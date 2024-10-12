@@ -1,0 +1,27 @@
+The files "chainanalysis.py" and "polymerAB.py" are python3 code which contain the BondReader class
+which are used to calculate quantities of interest from simulation output, including chain and block 
+length distributions, degree of polymerization, reaction extent, dispersity, etc. 
+
+The BondReader class operates on files output from simulation, and is used to produce the '.pickle' files 
+stored in the main directory which are used to generate figures. 
+
+The file "interior_exterior_copoly3.py" is a python3 analysis script used to identify monomers belonging to the interior
+and exterior of aggregated regions and determine the relative fraction and composition of monomers in these 
+populations. It utilizes the output data files of the LAMMPS simulation as its input.
+
+The file "rdf_script.py" is a python3 analysis script used to calculate the radial distribution from the
+output data files of a LAMMPS simulation.
+
+The file "barrcalc_v2.py" is a python3 analysis script used to calculate the total energy of a monomer-monomer
+interaction at the time of bond formation for all bonding events in the system, which is used to determine the
+activation energy as described in the Supplemental Information of the publication.
+
+The file "gen_data.py" is a python3 script which generates an input LAMMPS data file for initial configuration 
+of a LAMMPS simulation.
+
+An example simulation input directory "LAMMPS_Input_Sample" is included,
+which contains an example LAMMPS script and input files which generates the data
+and output files used by the BondReader class and the included python3 scripts.
+
+The full set of simulations used in this work are not included due to 
+space constraints, but are available from corresponding authors on request.

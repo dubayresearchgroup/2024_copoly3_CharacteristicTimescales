@@ -1,0 +1,23 @@
+Simulation analysis code for the publication "Characteristic System Timescales Can Influence the 
+Collective Sequence Development of Nematically Ordered Copolymers" (https://doi.org/10.1021/acs.macromol.4c01047) 
+
+The subdirectory "bond_reader" contains analysis code used in the calculation of the variables stored in
+the pickle files in the "copoly_data" directory, as well as an example simulation script and associated output files. 
+The full set of simulation data are not included due to size constraints, but are available from 
+corresponding authors upon request.
+
+The "copoly_data" directory contains pickle files with calculated variable of interest for each simulation
+performed. These files are referenced in the Jupyter Notebook 'copoly3_Averaging_and_Plots.ipynb' 
+for the creation of figures.
+
+The subdirectory "Clustering" contains analysis code used in the HDBSCAN clustering analysis
+and associated calculations and plots utilized in Section 3.4 of the publication.
+
+The file 'MC_Calculation.ipynb' is a Jupyter Notebook containing the Monte Carlo calculation utilized
+in Section 3.3 of the publication.
+
+The subdirectory "activation_energy_calculation' contains the analysis code and sample data files used to perform
+the calculation of observed activation energy for the reaction described in the SI for the publication.
+
+The subdirectory "LAMMPSsrc" contains modified source files for LAMMPS version 7Aug19, which are required to run
+the simulations performed in this work.
